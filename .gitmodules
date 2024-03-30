@@ -1,0 +1,3 @@
+[submodule "src/models"]
+	path = src/models
+	url = git@github.com:scaler-pics/scaler-models.git
