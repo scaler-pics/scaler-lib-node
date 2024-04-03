@@ -1,27 +1,28 @@
 import { jwtDecode } from 'jwt-decode';
 import {
-	Destination,
+	Destination as ApiDestination,
 	DestinationImageType,
 	NormalizedCrop,
 	Size,
-	SizeFit,
 	SourceImage,
 	TransfomResponse,
-	TransformUrlBody,
+	TransformOptions as ApiTransformOptions,
 	Upload,
 } from './models/transform';
 import fs from 'fs';
-import fetch from 'node-fetch';
+import { Readable } from 'stream';
 
-const refreshAccessTokenUrl = 'https://api.scaler.com/auth/api-key-token';
-const transformUrl = 'https://api.scaler.com/signed-url';
+const refreshAccessTokenUrl =
+	process.env.REFRESH_URL || 'https://api.scaler.com/auth/api-key-token';
+const transformUrl =
+	process.env.TRANSFORM_URL || 'https://api.scaler.com/signed-url';
 
 interface PromiseResolvers {
 	resolve: (value: void | PromiseLike<void>) => void;
 	reject: (reason?: any) => void;
 }
 
-export interface TransfromSource {
+export interface Source {
 	remoteUrl?: string;
 	localPath?: string;
 	buffer?: Buffer;
@@ -33,16 +34,17 @@ export interface ImageDelivery {
 	buffer?: boolean;
 }
 
-export interface TransfromDestination {
-	fit: SizeFit;
+export interface Destination {
+	fit: Size;
 	type: DestinationImageType;
 	quality?: number;
-	imageDelivery: ImageDelivery;
+	imageDelivery?: ImageDelivery;
 }
 
 export interface TransformOptions {
-	source: TransfromSource;
-	destinations: TransfromDestination[];
+	source: Source;
+	destination?: Destination;
+	destinations?: Destination[];
 	crop?: NormalizedCrop;
 }
 
@@ -54,7 +56,7 @@ export interface TransformResponse2 {
 export interface DestinationImage2 {
 	fit: Size;
 	pixelSize: Size;
-	image: Buffer | string | 'uploaded';
+	image: ArrayBuffer | string | 'uploaded';
 }
 
 export default class Scaler {
@@ -68,18 +70,29 @@ export default class Scaler {
 		this.refreshAccessTokenIfNeeded();
 	}
 
-	public transform = async (options: TransformOptions): TransformResponse2 => {
+	public transform = async (
+		options: TransformOptions
+	): Promise<TransformResponse2> => {
 		await this.refreshAccessTokenIfNeeded();
-		const destinations: Destination[] = options.destinations.map((dest) => {
+		if (
+			(!options.destinations || !options.destinations!.length) &&
+			!options.destination
+		) {
+			throw new Error('No destination provided');
+		}
+		const dests: Destination[] = options.destinations
+			? options.destinations
+			: [options.destination!];
+		const destinations: ApiDestination[] = dests.map((dest) => {
 			return {
 				fit: dest.fit,
 				type: dest.type,
 				quality: dest.quality,
-				upload: dest.imageDelivery.upload,
+				upload: dest.imageDelivery?.upload,
 			};
 		});
-		const options2: TransformUrlBody = {
-			source: { url: options.source.remoteUrl },
+		const options2: ApiTransformOptions = {
+			source: options.source.remoteUrl || 'body',
 			destinations,
 		};
 		const res = await fetch(transformUrl, {
@@ -102,16 +115,21 @@ export default class Scaler {
 		let body: any = undefined;
 		if (options.source.buffer) {
 			headers['Content-Type'] = 'application/x-octet-stream';
+			headers['Content-Length'] = `${options.source.buffer.length}`;
 			body = options.source.buffer;
 		} else if (options.source.localPath) {
 			headers['Content-Type'] = 'application/x-octet-stream';
+			const { size } = fs.statSync(options.source.localPath);
+			headers['Content-Type'] = 'application/x-octet-stream';
+			headers['Content-Length'] = `${size}`;
 			body = fs.createReadStream(options.source.localPath);
 		}
 		const res2 = await fetch(url, {
 			method: 'POST',
 			headers,
 			body,
-		});
+			duplex: 'half',
+		} as any);
 		if (res2.status !== 200) {
 			let text = await res2.text();
 			throw new Error(
@@ -121,65 +139,80 @@ export default class Scaler {
 		const { sourceImage, destinationImages } =
 			(await res2.json()) as TransfomResponse;
 		const promises = destinationImages.map(
-			(dest, i): Promise<{ image: Buffer | string | 'uploaded' }> => {
+			(dest, i): Promise<{ image: ArrayBuffer | string | 'uploaded' }> => {
 				if (dest.downloadUrl) {
 					let dlUrl = dest.downloadUrl;
-					if (options.destinations[i].imageDelivery.saveTolocalPath) {
-						const destPath = options.destinations[i].imageDelivery
+					if (dests[i].imageDelivery?.saveTolocalPath) {
+						const destPath = dests[i].imageDelivery!
 							.saveTolocalPath as string;
-						return new Promise<{ image: Buffer | string | 'uploaded' }>(
-							(resolve, reject) => {
-								fetch(dlUrl)
-									.then((res3) => {
-										if (res3.status !== 200) {
-											let text = res3.text();
-											reject(
-												new Error(
-													`Failed to download image. status: ${res3.status}, text: ${text}`
-												)
-											);
-											return;
-										}
-										const destStream = fs.createWriteStream(destPath);
-										res3.body.pipe(destStream);
-										destStream.on('finish', () => {
-											resolve({ image: destPath });
-										});
-										destStream.on('error', reject);
-									})
-									.catch((err) => {
-										reject(err);
+						return new Promise<{
+							image: ArrayBuffer | string | 'uploaded';
+						}>((resolve, reject) => {
+							fetch(dlUrl)
+								.then((res3) => {
+									if (res3.status !== 200) {
+										let text = res3.text();
+										reject(
+											new Error(
+												`Failed to download image. status: ${res3.status}, text: ${text}`
+											)
+										);
+										return;
+									}
+									if (res3.body === null) {
+										reject(new Error('Response body is null'));
+										return;
+									}
+									const reader = res3.body.getReader();
+									const stream = new Readable({
+										async read() {
+											const { done, value } = await reader.read();
+											if (done) {
+												this.push(null);
+											} else {
+												this.push(Buffer.from(value));
+											}
+										},
 									});
-							}
-						);
+									const destStream = fs.createWriteStream(destPath);
+									stream.pipe(destStream);
+									destStream.on('finish', () => {
+										resolve({ image: destPath });
+									});
+									destStream.on('error', reject);
+								})
+								.catch((err) => {
+									reject(err);
+								});
+						});
 					} else {
-						return new Promise<{ image: Buffer | string | 'uploaded' }>(
-							(resolve, reject) => {
-								fetch(dlUrl)
-									.then((res3) => {
-										if (res3.status !== 200) {
-											let text = res3.text();
-											reject(
-												new Error(
-													`Failed to download image. status: ${res3.status}, text: ${text}`
-												)
-											);
-											return;
-										}
-										res3
-											.buffer()
-											.then((buffer) => {
-												resolve({ image: buffer });
-											})
-											.catch((err) => {
-												reject(err);
-											});
-									})
-									.catch((err) => {
-										reject(err);
-									});
-							}
-						);
+						return new Promise<{
+							image: ArrayBuffer | string | 'uploaded';
+						}>((resolve, reject) => {
+							fetch(dlUrl)
+								.then((res3) => {
+									if (res3.status !== 200) {
+										let text = res3.text();
+										reject(
+											new Error(
+												`Failed to download image. status: ${res3.status}, text: ${text}`
+											)
+										);
+										return;
+									}
+									res3
+										.arrayBuffer()
+										.then((buffer) => {
+											resolve({ image: buffer });
+										})
+										.catch((err) => {
+											reject(err);
+										});
+								})
+								.catch((err) => {
+									reject(err);
+								});
+						});
 					}
 				} else {
 					return Promise.resolve({ image: 'uploaded' });
