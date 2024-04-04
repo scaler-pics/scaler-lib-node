@@ -4,8 +4,8 @@ import {
 	DestinationImageType,
 	NormalizedCrop,
 	Size,
-	SourceImage,
-	TransfomResponse,
+	SourceImage as SourceImageInfo,
+	TransfomResponse as ApiTransfomResponse,
 	TransformOptions as ApiTransformOptions,
 	Upload,
 } from './models/transform';
@@ -22,7 +22,20 @@ interface PromiseResolvers {
 	reject: (reason?: any) => void;
 }
 
-export interface Source {
+export interface TransformOptions {
+	source: SourceOptions;
+	destination?: DestinationOptions;
+	destinations?: DestinationOptions[];
+	crop?: NormalizedCrop;
+}
+
+export interface TransformResponse {
+	sourceImage: SourceImageInfo;
+	image?: ImageResult;
+	destinationImages?: DestinationImage[];
+}
+
+export interface SourceOptions {
 	remoteUrl?: string;
 	localPath?: string;
 	buffer?: Buffer;
@@ -34,30 +47,20 @@ export interface ImageDelivery {
 	buffer?: boolean;
 }
 
-export interface Destination {
+export interface DestinationOptions {
 	fit: Size;
 	type: DestinationImageType;
 	quality?: number;
 	imageDelivery?: ImageDelivery;
 }
 
-export interface TransformOptions {
-	source: Source;
-	destination?: Destination;
-	destinations?: Destination[];
-	crop?: NormalizedCrop;
-}
-
-export interface TransformResponse2 {
-	sourceImage: SourceImage;
-	destinationImages: DestinationImage2[];
-}
-
-export interface DestinationImage2 {
+export interface DestinationImage {
 	fit: Size;
 	pixelSize: Size;
-	image: ArrayBuffer | string | 'uploaded';
+	image: ImageResult;
 }
+
+export type ImageResult = ArrayBuffer | string | 'uploaded';
 
 export default class Scaler {
 	private apiKey: string;
@@ -72,7 +75,7 @@ export default class Scaler {
 
 	public transform = async (
 		options: TransformOptions
-	): Promise<TransformResponse2> => {
+	): Promise<TransformResponse> => {
 		await this.refreshAccessTokenIfNeeded();
 		if (
 			(!options.destinations || !options.destinations!.length) &&
@@ -80,7 +83,7 @@ export default class Scaler {
 		) {
 			throw new Error('No destination provided');
 		}
-		const dests: Destination[] = options.destinations
+		const dests: DestinationOptions[] = options.destinations
 			? options.destinations
 			: [options.destination!];
 		const destinations: ApiDestination[] = dests.map((dest) => {
@@ -137,7 +140,7 @@ export default class Scaler {
 			);
 		}
 		const { sourceImage, destinationImages } =
-			(await res2.json()) as TransfomResponse;
+			(await res2.json()) as ApiTransfomResponse;
 		const promises = destinationImages.map(
 			(dest, i): Promise<{ image: ArrayBuffer | string | 'uploaded' }> => {
 				if (dest.downloadUrl) {
@@ -220,15 +223,18 @@ export default class Scaler {
 			}
 		);
 		const destinationImages2 = await Promise.all(promises);
-		const response: TransformResponse2 = {
+		const response: TransformResponse = {
 			sourceImage,
-			destinationImages: destinationImages.map((dest, i) => {
-				return {
-					fit: dest.fit,
-					pixelSize: dest.pixelSize,
-					image: destinationImages2[i].image,
-				};
-			}),
+			image: options.destination ? destinationImages2[0].image : undefined,
+			destinationImages: options.destinations
+				? destinationImages.map((dest, i) => {
+						return {
+							fit: dest.fit,
+							pixelSize: dest.pixelSize,
+							image: destinationImages2[i].image,
+						};
+				  })
+				: undefined,
 		};
 		return response;
 	};
