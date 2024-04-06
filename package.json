@@ -1,14 +1,16 @@
 {
 	"name": "scaler",
 	"version": "1.0.0",
-	"description": "Node's scaler API library",
-	"main": "dist/index.js",
+	"description": "Node.js scaler API library for transforming photos and images",
+	"main": "dist/scaler.js",
+	"types": "dist/scaler.d.ts",
 	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1"
+		"build": "tsc",
+		"lint": "eslint --ext .ts src"
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/zengadget/scaler-lib.git"
+		"url": "git+https://github.com/scale-pics/scaler-lib.git"
 	},
 	"keywords": [
 		"resize",
@@ -20,15 +22,17 @@
 	"author": "Matej Ukmar",
 	"license": "ISC",
 	"bugs": {
-		"url": "https://github.com/zengadget/scaler-lib/issues"
+		"url": "https://github.com/scaler-pics/scaler-lib/issues"
 	},
-	"homepage": "https://github.com/zengadget/scaler-lib#readme",
+	"homepage": "https://github.com/scaler-pics/scaler-lib#readme",
 	"dependencies": {
 		"@types/dateformat": "^3.0.1",
 		"@types/jwt-decode": "^3.1.0",
 		"@types/node": "^20.11.30",
 		"dateformat": "^3.0.3",
+		"eslint": "^8.57.0",
 		"jwt-decode": "^4.0.0",
-		"typescript": "^5.4.3"
+		"typescript": "^5.4.3",
+		"typescript-eslint": "^7.5.0"
 	}
 }

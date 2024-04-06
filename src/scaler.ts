@@ -107,7 +107,7 @@ export default class Scaler {
 			body: JSON.stringify(options2),
 		});
 		if (res.status !== 200) {
-			let text = await res.text();
+			const text = await res.text();
 			throw new Error(
 				`Failed to get transform url. status: ${res.status}, text: ${text}`
 			);
@@ -134,7 +134,7 @@ export default class Scaler {
 			duplex: 'half',
 		} as any);
 		if (res2.status !== 200) {
-			let text = await res2.text();
+			const text = await res2.text();
 			throw new Error(
 				`Failed to transform image. status: ${res2.status}, text: ${text}`
 			);
@@ -144,7 +144,7 @@ export default class Scaler {
 		const promises = destinationImages.map(
 			(dest, i): Promise<{ image: ArrayBuffer | string | 'uploaded' }> => {
 				if (dest.downloadUrl) {
-					let dlUrl = dest.downloadUrl;
+					const dlUrl = dest.downloadUrl;
 					if (dests[i].imageDelivery?.saveTolocalPath) {
 						const destPath = dests[i].imageDelivery!
 							.saveTolocalPath as string;
@@ -154,7 +154,7 @@ export default class Scaler {
 							fetch(dlUrl)
 								.then((res3) => {
 									if (res3.status !== 200) {
-										let text = res3.text();
+										const text = res3.text();
 										reject(
 											new Error(
 												`Failed to download image. status: ${res3.status}, text: ${text}`
@@ -195,7 +195,7 @@ export default class Scaler {
 							fetch(dlUrl)
 								.then((res3) => {
 									if (res3.status !== 200) {
-										let text = res3.text();
+										const text = res3.text();
 										reject(
 											new Error(
 												`Failed to download image. status: ${res3.status}, text: ${text}`
@@ -233,6 +233,7 @@ export default class Scaler {
 							pixelSize: dest.pixelSize,
 							image: destinationImages2[i].image,
 						};
+						// eslint-disable-next-line
 				  })
 				: undefined,
 		};
@@ -268,7 +269,7 @@ export default class Scaler {
 				},
 			});
 			if (res.status !== 200) {
-				let text = await res.text();
+				const text = await res.text();
 				throw new Error(
 					`Failed to refresh the access token. status: ${res.status}, text: ${text}`
 				);
