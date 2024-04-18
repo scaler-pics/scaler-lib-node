@@ -10,6 +10,8 @@ npm install scaler.pics
 
 ## Basic Usage
 
+Initialize the scaler object with your API key, which you can obtain from [Scaler](https://scaler.pics). Then use it to transform images as needed.
+
 ```javascript
 import Scaler from 'scaler.pics';
 
@@ -25,9 +27,9 @@ const { image } = await scaler.transform({
 });
 ```
 
-Initialize the scaler object with your API key (only once in your project), which you can obtain from [Scaler](https://scaler.pics). Then use it to transform images as needed.
-
 ## Multiple Destinations
+
+Generate multiple images in a single request (up to 10). Images can be returned as an ArrayBuffer, saved to a specified local path, or uploaded to a storage bucket.
 
 ```javascript
 import Scaler from 'scaler.pics';
@@ -61,8 +63,6 @@ const response = await scaler.transform({
    ],
 });
 ```
-
-Generate multiple images in a single request (up to 10). Images can be returned as an ArrayBuffer, saved to a specified local path, or uploaded to a storage bucket.
 
 ## Transform Options
 
