@@ -4,7 +4,7 @@ import {
 	DestinationImageType,
 	NormalizedCrop,
 	Size,
-	SourceImage as SourceImageInfo,
+	SourceImageInfo,
 	TransfomResponse as ApiTransfomResponse,
 	TransformOptions as ApiTransformOptions,
 	Upload,
@@ -13,9 +13,9 @@ import fs from 'fs';
 import { Readable } from 'stream';
 
 const refreshAccessTokenUrl =
-	process.env.REFRESH_URL || 'https://api.scaler.com/auth/api-key-token';
+	process.env.REFRESH_URL || 'https://api.scaler.pics/auth/api-key-token';
 const transformUrl =
-	process.env.TRANSFORM_URL || 'https://api.scaler.com/signed-url';
+	process.env.TRANSFORM_URL || 'https://api.scaler.pics/signed-url';
 
 interface PromiseResolvers {
 	resolve: (value: void | PromiseLike<void>) => void;
@@ -42,7 +42,7 @@ export interface SourceOptions {
 }
 
 export interface ImageDelivery {
-	saveTolocalPath?: string;
+	saveToLocalPath?: string;
 	upload?: Upload;
 	buffer?: boolean;
 }
@@ -145,9 +145,9 @@ export default class Scaler {
 			(dest, i): Promise<{ image: ArrayBuffer | string | 'uploaded' }> => {
 				if (dest.downloadUrl) {
 					const dlUrl = dest.downloadUrl;
-					if (dests[i].imageDelivery?.saveTolocalPath) {
+					if (dests[i].imageDelivery?.saveToLocalPath) {
 						const destPath = dests[i].imageDelivery!
-							.saveTolocalPath as string;
+							.saveToLocalPath as string;
 						return new Promise<{
 							image: ArrayBuffer | string | 'uploaded';
 						}>((resolve, reject) => {
