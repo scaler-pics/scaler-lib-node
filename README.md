@@ -2,7 +2,7 @@
 
 ## Installation
 
-To use Scaler Node.js API, you need to install the package from npm.
+To use [Scaler](https://scaler.pics) Node.js API, you need to install the package from npm.
 
 ```shell
 npm install scaler.pics
@@ -16,16 +16,16 @@ import Scaler from 'scaler';
 const scaler = new Scaler('YOUR_API_KEY');
 
 const { image } = await scaler.transform({
-	source: { localPath: '/path/to/large-image.heic' },
-	destination: {
-		type: 'jpeg',
-		fit: { width: 512, height: 512 },
-		quality: 0.8,
-	},
+   source: { localPath: '/path/to/large-image.heic' },
+   destination: {
+      type: 'jpeg',
+      fit: { width: 512, height: 512 },
+      quality: 0.8,
+   },
 });
 ```
 
-Initialize the `scaler` object with your API key (only once in your project), and then use it to transform images as needed. You can get API key here: [scaler.pics](https://scaler.pics)
+Initialize the `scaler` object with your API key (only once in your project), and then use it to transform images as needed. You can get API key here [scaler.pics](https://scaler.pics).
 
 ## Transform Options
 
@@ -33,34 +33,34 @@ Below are self-explanatory TypeScript interfaces of the transform options.
 
 ```typescript
 interface TransformOptions {
-	source: SourceOptions;
-	destination?: DestinationOptions;
-	destinations?: DestinationOptions[];
-	crop?: NormalizedCrop;
+   source: SourceOptions;
+   destination?: DestinationOptions;
+   destinations?: DestinationOptions[];
+   crop?: NormalizedCrop;
 }
 
 interface SourceOptions {
-	remoteUrl?: string;
-	localPath?: string;
-	buffer?: Buffer;
+   remoteUrl?: string;
+   localPath?: string;
+   buffer?: Buffer;
 }
 
 interface DestinationOptions {
-	fit: Size;
-	type: DestinationImageType;
-	quality?: number;
-	imageDelivery?: ImageDelivery;
+   fit: Size;
+   type: DestinationImageType;
+   quality?: number;
+   imageDelivery?: ImageDelivery;
 }
 
 interface ImageDelivery {
-	saveTolocalPath?: string;
-	upload?: Upload;
-	buffer?: boolean;
+   saveTolocalPath?: string;
+   upload?: Upload;
+   buffer?: boolean;
 }
 
 interface Upload {
-	url: string;
-	method?: 'post' | 'put';
+   url: string;
+   method?: 'post' | 'put';
 }
 
 type DestinationImageType = 'jpeg' | 'png' | 'heic';
@@ -78,27 +78,27 @@ The **upload** parameter of **ImageDelivery** is useful if you want to upload th
 
 ```typescript
 interface TransformResponse {
-	sourceImage: SourceImageInfo;
-	image?: ImageResult;
-	destinationImages?: DestinationImage[];
+   sourceImage: SourceImageInfo;
+   image?: ImageResult;
+   destinationImages?: DestinationImage[];
 }
 
 interface SourceImageInfo {
-	pixelSize: Size;
-	byteSize: number;
+   pixelSize: Size;
+   byteSize: number;
 }
 
 interface DestinationImage {
-	fit: Size;
-	pixelSize: Size;
-	image: ImageResult;
+   fit: Size;
+   pixelSize: Size;
+   image: ImageResult;
 }
 
 type ImageResult = ArrayBuffer | string | 'uploaded';
 
 interface Size {
-	width: number;
-	height: number;
+   width: number;
+   height: number;
 }
 ```
 
