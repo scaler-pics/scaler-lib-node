@@ -1,6 +1,6 @@
 node_modules
 .DS_Store
-tests/signUploadUrl.ts
+tests/bucketSecrets.ts
 tests/test-result.jpeg
 tests/test.heic
 dist
