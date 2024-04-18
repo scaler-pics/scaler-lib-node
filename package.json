@@ -1,16 +1,17 @@
 {
-	"name": "scaler",
-	"version": "1.0.0",
-	"description": "Node.js scaler API library for transforming photos and images",
+	"name": "scaler.pics",
+	"version": "0.9.0",
+	"description": "Scaler.pics API helper library for transforming photos and images",
 	"main": "dist/scaler.js",
 	"types": "dist/scaler.d.ts",
+	"private": false,
 	"scripts": {
 		"build": "tsc",
 		"lint": "eslint --ext .ts src"
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/scale-pics/scaler-lib.git"
+		"url": "git+https://github.com/scaler-pics/scaler-lib.git"
 	},
 	"keywords": [
 		"resize",
