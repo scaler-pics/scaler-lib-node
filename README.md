@@ -2,7 +2,7 @@
 
 ## Installation
 
-To use [Scaler](https://scaler.pics) Node.js API, you need to install the package from npm.
+To use the [Scaler](https://scaler.pics) Node.js API, install the npm package as follows:
 
 ```shell
 npm install scaler.pics
@@ -11,7 +11,7 @@ npm install scaler.pics
 ## Basic Usage
 
 ```javascript
-import Scaler from 'scaler';
+import Scaler from 'scaler.pics';
 
 const scaler = new Scaler('YOUR_API_KEY');
 
@@ -25,7 +25,44 @@ const { image } = await scaler.transform({
 });
 ```
 
-Initialize the `scaler` object with your API key (only once in your project), and then use it to transform images as needed. You can get API key here [scaler.pics](https://scaler.pics).
+Initialize the scaler object with your API key (only once in your project), which you can obtain from [Scaler](https://scaler.pics). Then use it to transform images as needed.
+
+## Multiple Destinations
+
+```javascript
+import Scaler from 'scaler.pics';
+
+const scaler = new Scaler('YOUR_API_KEY');
+
+const response = await scaler.transform({
+   source: { localPath: '/path/to/large-image.heic' },
+   destinations: [
+      {
+         type: 'jpeg',
+         fit: { width: 1280, height: 1280 },
+         quality: 0.8,
+         imageDelivery: {
+            saveToLocalPath: '/tmp/image-1280.jpeg',
+         },
+      },
+      {
+         type: 'jpeg',
+         fit: { width: 1024, height: 1024 },
+         quality: 0.8,
+         imageDelivery: {
+            upload: {
+               url: signUploadUrl(
+                  'https://bucket.domain/path/to/image-1024.jpeg?signature=...'
+               ),
+               method: 'PUT',
+            },
+         },
+      },
+   ],
+});
+```
+
+Generate multiple images in a single request (up to 10). Images can be returned as an ArrayBuffer, saved to a specified local path, or uploaded to a storage bucket.
 
 ## Transform Options
 
@@ -68,11 +105,11 @@ type DestinationImageType = 'jpeg' | 'png' | 'heic';
 
 Exactly one property of the **SourceOptions** object can be specified for the source image. If specifying **remoteUrl** make sure the URL is valid and the image freely accessible.
 
-You can set either one **destination** or multiple **destionations** (up to 10).
+You can set either one **destination** or multiple **destinations** (up to 10).
 
 Exactly one optional parameter of **ImageDelivery** needs to be specified. If **imageDelivery** itself is undefined, the image will be delivered as **ArrayBuffer**.
 
-The **upload** parameter of **ImageDelivery** is useful if you want to upload the image directly to an **AWS S3 bucket**, **Google Cloud Storage**, or similar service. Just provide signed URL for the upload and method to use.
+The **upload** parameter of **ImageDelivery** allows you to upload the image directly to services like AWS S3 bucket or Google Cloud Storage. Provide a signed URL and the method for the upload.
 
 ## Transform Response
 
@@ -106,4 +143,4 @@ interface Size {
 
 If single destination was set in the **TransformOptions** then the result will be in the **image** property of the response, otherwise in the **destinationImages**.
 
-**image** property of the **DestinationImage** is either **ArrayBuffer**, the string value **'uploaded'** if image was uploaded to the storage bucket or path to local file where transformed image was saved.
+The **image** property of the **DestinationImage** varies: it can be an ArrayBuffer, a string indicating the image was 'uploaded', or a path to the local file where the transformed image was saved.
