@@ -105,9 +105,9 @@ type DestinationImageType = 'jpeg' | 'png' | 'heic';
 
 Exactly one property of the **SourceOptions** object can be specified for the source image. If specifying **remoteUrl** make sure the URL is valid and the image freely accessible.
 
-You can set either one **destination** or multiple **destinations** (up to 10).
+You can set either single **destination** or multiple **destinations** (up to 10).
 
-Exactly one optional parameter of **ImageDelivery** needs to be specified. If **imageDelivery** itself is undefined, the image will be delivered as **ArrayBuffer**.
+Exactly one optional parameter of **ImageDelivery** needs to be specified. If **imageDelivery** itself is undefined, the image will be delivered as an **ArrayBuffer**.
 
 The **upload** parameter of **ImageDelivery** allows you to upload the image directly to services like AWS S3 bucket or Google Cloud Storage. Provide a signed URL and the method for the upload.
 
