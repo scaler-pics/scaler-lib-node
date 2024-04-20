@@ -8,6 +8,7 @@ import {
 	TransfomResponse as ApiTransfomResponse,
 	TransformOptions as ApiTransformOptions,
 	Upload,
+	ImageDeleteBody,
 } from './models/transform';
 import fs from 'fs';
 import { Readable } from 'stream';
@@ -15,7 +16,7 @@ import { Readable } from 'stream';
 const refreshAccessTokenUrl =
 	process.env.REFRESH_URL || 'https://api.scaler.pics/auth/api-key-token';
 const transformUrl =
-	process.env.TRANSFORM_URL || 'https://api.scaler.pics/signed-url';
+	process.env.TRANSFORM_URL || 'https://sign.scaler.pics/sign';
 
 interface PromiseResolvers {
 	resolve: (value: void | PromiseLike<void>) => void;
@@ -139,7 +140,7 @@ export default class Scaler {
 				`Failed to transform image. status: ${res2.status}, text: ${text}`
 			);
 		}
-		const { sourceImage, destinationImages } =
+		const { sourceImage, destinationImages, deleteUrl } =
 			(await res2.json()) as ApiTransfomResponse;
 		const promises = destinationImages.map(
 			(dest, i): Promise<{ image: ArrayBuffer | string | 'uploaded' }> => {
@@ -237,6 +238,20 @@ export default class Scaler {
 				  })
 				: undefined,
 		};
+		let deleteBody: ImageDeleteBody = {
+			images: destinationImages
+				.filter((dest) => dest.fileId)
+				.map((dest) => dest.fileId!),
+		};
+		fetch(deleteUrl, {
+			method: 'DELETE',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(deleteBody),
+		}).catch((error) => {
+			console.error('Failed to delete received images', error);
+		});
 		return response;
 	};
 
