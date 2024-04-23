@@ -15,8 +15,7 @@ import { Readable } from 'stream';
 
 const refreshAccessTokenUrl =
 	process.env.REFRESH_URL || 'https://api.scaler.pics/auth/api-key-token';
-const transformUrl =
-	process.env.TRANSFORM_URL || 'https://sign.scaler.pics/sign';
+const transformUrl = process.env.SIGN_URL || 'https://sign.scaler.pics/sign';
 
 interface PromiseResolvers {
 	resolve: (value: void | PromiseLike<void>) => void;
