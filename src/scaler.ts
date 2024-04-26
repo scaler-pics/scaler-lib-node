@@ -15,7 +15,7 @@ import { Readable } from 'stream';
 
 const refreshAccessTokenUrl =
 	process.env.REFRESH_URL || 'https://api.scaler.pics/auth/api-key-token';
-const transformUrl = process.env.SIGN_URL || 'https://sign.scaler.pics/sign';
+const signUrl = process.env.SIGN_URL || 'https://sign.scaler.pics/sign';
 
 interface PromiseResolvers {
 	resolve: (value: void | PromiseLike<void>) => void;
@@ -77,6 +77,7 @@ export default class Scaler {
 		options: TransformOptions
 	): Promise<TransformResponse> => {
 		await this.refreshAccessTokenIfNeeded();
+		const start = Date.now();
 		if (
 			(!options.destinations || !options.destinations!.length) &&
 			!options.destination
@@ -98,7 +99,8 @@ export default class Scaler {
 			source: options.source.remoteUrl || 'body',
 			destinations,
 		};
-		const res = await fetch(transformUrl, {
+		const start2 = Date.now();
+		const res = await fetch(signUrl, {
 			method: 'POST',
 			headers: {
 				Authorization: `Bearer ${this.accessToken}`,
@@ -113,7 +115,10 @@ export default class Scaler {
 			);
 		}
 		const json = await res.json();
+		const end2 = Date.now();
+		console.log(`Sign took ${(end2 - start2) / 1000}s`);
 		const { url } = json as { url: string };
+		const start3 = Date.now();
 		const headers: HeadersInit = {};
 		let body: any = undefined;
 		if (options.source.buffer) {
@@ -251,6 +256,9 @@ export default class Scaler {
 		}).catch((error) => {
 			console.error('Failed to delete received images', error);
 		});
+		const end = Date.now();
+		console.log(`Transform took ${(end - start3) / 1000}s`);
+		console.log(`All took ${(end - start) / 1000}s`);
 		return response;
 	};
 
