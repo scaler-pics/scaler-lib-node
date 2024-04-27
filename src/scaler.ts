@@ -33,6 +33,13 @@ export interface TransformResponse {
 	sourceImage: SourceImageInfo;
 	image?: ImageResult;
 	destinationImages?: DestinationImage[];
+	timeStats: {
+		signMs: number;
+		sendImageMs: number;
+		transformMs: number;
+		getImagesMs: number;
+		totalMs: number;
+	};
 }
 
 export interface SourceOptions {
@@ -99,7 +106,7 @@ export default class Scaler {
 			source: options.source.remoteUrl || 'body',
 			destinations,
 		};
-		const start2 = Date.now();
+		const startSignUrl = Date.now();
 		const res = await fetch(signUrl, {
 			method: 'POST',
 			headers: {
@@ -115,10 +122,8 @@ export default class Scaler {
 			);
 		}
 		const json = await res.json();
-		const end2 = Date.now();
-		console.log(`Sign took ${(end2 - start2) / 1000}s`);
+		const signMs = Date.now() - startSignUrl;
 		const { url } = json as { url: string };
-		const start3 = Date.now();
 		const headers: HeadersInit = {};
 		let body: any = undefined;
 		if (options.source.buffer) {
@@ -144,8 +149,13 @@ export default class Scaler {
 				`Failed to transform image. status: ${res2.status}, text: ${text}`
 			);
 		}
-		const { sourceImage, destinationImages, deleteUrl } =
-			(await res2.json()) as ApiTransfomResponse;
+		const {
+			sourceImage,
+			destinationImages,
+			deleteUrl,
+			timeStats: apiTimeStats,
+		} = (await res2.json()) as ApiTransfomResponse;
+		const startGetImages = Date.now();
 		const promises = destinationImages.map(
 			(dest, i): Promise<{ image: ArrayBuffer | string | 'uploaded' }> => {
 				if (dest.downloadUrl) {
@@ -228,6 +238,23 @@ export default class Scaler {
 			}
 		);
 		const destinationImages2 = await Promise.all(promises);
+		const getImagesMs =
+			apiTimeStats.uploadImageMs || Date.now() - startGetImages;
+		let deleteBody: ImageDeleteBody = {
+			images: destinationImages
+				.filter((dest) => dest.fileId)
+				.map((dest) => dest.fileId!),
+		};
+		fetch(deleteUrl, {
+			method: 'DELETE',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(deleteBody),
+		}).catch((error) => {
+			console.error('Failed to delete received images', error);
+		});
+		const totalMs = Date.now() - start;
 		const response: TransformResponse = {
 			sourceImage,
 			image: options.destination ? destinationImages2[0].image : undefined,
@@ -241,30 +268,14 @@ export default class Scaler {
 						// eslint-disable-next-line
 				  })
 				: undefined,
-		};
-		let deleteBody: ImageDeleteBody = {
-			images: destinationImages
-				.filter((dest) => dest.fileId)
-				.map((dest) => dest.fileId!),
-		};
-		const start4 = Date.now();
-		fetch(deleteUrl, {
-			method: 'DELETE',
-			headers: {
-				'Content-Type': 'application/json',
+			timeStats: {
+				signMs,
+				sendImageMs: apiTimeStats.getImageMs,
+				transformMs: apiTimeStats.transformMs,
+				getImagesMs,
+				totalMs,
 			},
-			body: JSON.stringify(deleteBody),
-		})
-			.then(() => {
-				const end4 = Date.now();
-				console.log(`Delete took ${(end4 - start4) / 1000}s`);
-			})
-			.catch((error) => {
-				console.error('Failed to delete received images', error);
-			});
-		const end = Date.now();
-		console.log(`Transform took ${(end - start3) / 1000}s`);
-		console.log(`All took ${(end - start) / 1000}s`);
+		};
 		return response;
 	};
 
