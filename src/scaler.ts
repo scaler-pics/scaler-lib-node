@@ -247,15 +247,21 @@ export default class Scaler {
 				.filter((dest) => dest.fileId)
 				.map((dest) => dest.fileId!),
 		};
+		const start4 = Date.now();
 		fetch(deleteUrl, {
 			method: 'DELETE',
 			headers: {
 				'Content-Type': 'application/json',
 			},
 			body: JSON.stringify(deleteBody),
-		}).catch((error) => {
-			console.error('Failed to delete received images', error);
-		});
+		})
+			.then(() => {
+				const end4 = Date.now();
+				console.log(`Delete took ${(end4 - start4) / 1000}s`);
+			})
+			.catch((error) => {
+				console.error('Failed to delete received images', error);
+			});
 		const end = Date.now();
 		console.log(`Transform took ${(end - start3) / 1000}s`);
 		console.log(`All took ${(end - start) / 1000}s`);
