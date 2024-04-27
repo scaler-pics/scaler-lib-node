@@ -239,7 +239,7 @@ export default class Scaler {
 		);
 		const destinationImages2 = await Promise.all(promises);
 		const getImagesMs =
-			apiTimeStats.uploadImageMs || Date.now() - startGetImages;
+			apiTimeStats.uploadImagesMs || Date.now() - startGetImages;
 		let deleteBody: ImageDeleteBody = {
 			images: destinationImages
 				.filter((dest) => dest.fileId)
