@@ -137,6 +137,7 @@ export default class Scaler {
 			headers['Content-Length'] = `${size}`;
 			body = fs.createReadStream(options.source.localPath);
 		}
+		const startTransformTime = Date.now();
 		const res2 = await fetch(url, {
 			method: 'POST',
 			headers,
@@ -149,12 +150,18 @@ export default class Scaler {
 				`Failed to transform image. status: ${res2.status}, text: ${text}`
 			);
 		}
+		const endTransformTime = Date.now();
 		const {
 			sourceImage,
 			destinationImages,
 			deleteUrl,
 			timeStats: apiTimeStats,
 		} = (await res2.json()) as ApiTransfomResponse;
+		const sendImageMs =
+			endTransformTime -
+			startTransformTime -
+			apiTimeStats.transformMs -
+			(apiTimeStats.uploadImagesMs || 0);
 		const startGetImages = Date.now();
 		const promises = destinationImages.map(
 			(dest, i): Promise<{ image: ArrayBuffer | string | 'uploaded' }> => {
@@ -270,7 +277,7 @@ export default class Scaler {
 				: undefined,
 			timeStats: {
 				signMs,
-				sendImageMs: apiTimeStats.getImageMs,
+				sendImageMs,
 				transformMs: apiTimeStats.transformMs,
 				getImagesMs,
 				totalMs,
