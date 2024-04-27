@@ -42,7 +42,7 @@ async function test() {
 			},
 		],
 	});
-	console.log('response', response);
+	console.log('response', JSON.stringify(response, null, 3));
 }
 
 test();

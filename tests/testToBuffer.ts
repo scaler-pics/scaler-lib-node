@@ -11,7 +11,7 @@ async function test() {
 			quality: 0.8,
 		},
 	});
-	console.log('response', response);
+	console.log('response', JSON.stringify(response, null, 3));
 }
 
 test();
