@@ -1,4 +1,4 @@
-import Scaler from '../src/scaler';
+const Scaler = require('../dist/scaler').default;
 
 let scaler = new Scaler(process.env.API_KEY || '');
 
