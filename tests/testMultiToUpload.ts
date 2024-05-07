@@ -1,7 +1,7 @@
 import Scaler from '../src/scaler';
 import signUploadUrl from './signUploadUrl';
 
-let scaler = new Scaler(process.env.API_KEY || '');
+const scaler = new Scaler(process.env.API_KEY || '');
 
 async function test() {
 	const response = await scaler.transform({
