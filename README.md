@@ -26,6 +26,12 @@ const { image } = await scaler.transform({
    },
 });
 ```
+<em>
+	When testing the api make sure you test from location with a
+	good upload speed as that can greatly affect the response
+	time. (for example, test from your server and not from your
+	local machine)
+</em>
 
 ## Multiple Destinations
 
@@ -69,38 +75,43 @@ const response = await scaler.transform({
 Below are self-explanatory TypeScript interfaces of the transform options.
 
 ```typescript
-interface TransformOptions {
-   source: SourceOptions;
-   destination?: DestinationOptions;
-   destinations?: DestinationOptions[];
-   crop?: NormalizedCrop;
+export interface TransformOptions {
+	source: SourceOptions;
+	destination?: DestinationOptions;
+	destinations?: DestinationOptions[];
 }
 
-interface SourceOptions {
-   remoteUrl?: string;
-   localPath?: string;
-   buffer?: Buffer;
+interface Source {
+	remoteUrl?: string;
+	localPath?: string;
+	buffer?: Buffer;
 }
 
 interface DestinationOptions {
-   fit: Size;
-   type: DestinationImageType;
-   quality?: number;
-   imageDelivery?: ImageDelivery;
+	fit: Size;
+	type: DestinationImageType;
+	quality?: number;
+	imageDelivery?: ImageDelivery;
+	crop?: NormalizedCrop;
 }
 
-interface ImageDelivery {
-   saveTolocalPath?: string;
-   upload?: Upload;
-   buffer?: boolean;
-}
-
-interface Upload {
-   url: string;
-   method?: 'post' | 'put';
+interface Size {
+	width: number;
+	height: number;
 }
 
 type DestinationImageType = 'jpeg' | 'png' | 'heic';
+
+interface ImageDelivery {
+	saveToLocalPath?: string;
+	upload?: Upload;
+	buffer?: boolean;
+}
+
+export interface Upload {
+	url: string;
+	method?: 'POST' | 'PUT';
+}
 ```
 
 Exactly one property of the **SourceOptions** object can be specified for the source image. If specifying **remoteUrl** make sure the URL is valid and the image freely accessible.
@@ -114,10 +125,17 @@ The **upload** parameter of **ImageDelivery** allows you to upload the image dir
 ## Transform Response
 
 ```typescript
-interface TransformResponse {
-   sourceImage: SourceImageInfo;
-   image?: ImageResult;
-   destinationImages?: DestinationImage[];
+export interface TransformResponse {
+	sourceImage: SourceImageInfo;
+	image?: ImageResult;
+	destinationImages?: DestinationImage[];
+	timeStats: {
+		signMs: number;
+		sendImageMs: number;
+		transformMs: number;
+		getImagesMs: number;
+		totalMs: number;
+	};
 }
 
 interface SourceImageInfo {
@@ -139,7 +157,7 @@ interface Size {
 }
 ```
 
-**sourceImage** contains some information about the image sent.
+**sourceImage** contains information about the image sent.
 
 If single destination was set in the **TransformOptions** then the result will be in the **image** property of the response, otherwise in the **destinationImages**.
 
