@@ -26,7 +26,6 @@ export interface TransformOptions {
 	source: SourceOptions;
 	destination?: DestinationOptions;
 	destinations?: DestinationOptions[];
-	crop?: NormalizedCrop;
 }
 
 export interface TransformResponse {
@@ -59,6 +58,7 @@ export interface DestinationOptions {
 	type: DestinationImageType;
 	quality?: number;
 	imageDelivery?: ImageDelivery;
+	crop?: NormalizedCrop;
 }
 
 export interface DestinationImage {
@@ -100,6 +100,7 @@ export default class Scaler {
 				type: dest.type,
 				quality: dest.quality,
 				upload: dest.imageDelivery?.upload,
+				crop: dest.crop,
 			};
 		});
 		const options2: ApiTransformOptions = {
@@ -247,7 +248,7 @@ export default class Scaler {
 		const destinationImages2 = await Promise.all(promises);
 		const getImagesMs =
 			apiTimeStats.uploadImagesMs || Date.now() - startGetImages;
-		let deleteBody: ImageDeleteBody = {
+		const deleteBody: ImageDeleteBody = {
 			images: destinationImages
 				.filter((dest) => dest.fileId)
 				.map((dest) => dest.fileId!),
