@@ -1,6 +1,5 @@
 node_modules
 .DS_Store
 tests/bucketSecrets.ts
-dist
 runTest
 test-data

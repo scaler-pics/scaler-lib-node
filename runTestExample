@@ -1,8 +1,0 @@
-#!/bin/sh
-
-REFRESH_URL=http://127.0.0.1:4667/auth/api-key-token \
-TRANSFORM_URL=https://sign.scaler.pics/sign \
-UPLOAD_URI=atest/test-image3.jpeg \
-API_KEY=API_KEY \
-ts-node tests/testToBuffer.ts
-
