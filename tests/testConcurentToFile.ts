@@ -8,7 +8,7 @@ async function test() {
 	// get first argument from command line
 	const count = parseInt(process.argv[2]) || 10;
 	for (let i = 0; i < count; i++) {
-		promises.push(transfromImage());
+		promises.push(transfromImage(i));
 	}
 	await Promise.all(promises);
 	console.log(
@@ -17,7 +17,7 @@ async function test() {
 	);
 }
 
-async function transfromImage() {
+async function transfromImage(index: number) {
 	const response = await scaler.transform({
 		source: { localPath: 'test-data/test.heic' },
 		destinations: [
@@ -26,7 +26,7 @@ async function transfromImage() {
 				fit: { width: 1280, height: 1280 },
 				quality: 0.8,
 				imageDelivery: {
-					saveToLocalPath: 'test-data/test-result1280.jpeg',
+					saveToLocalPath: `test-data/test-result-${index}-1280.jpeg`,
 				},
 			},
 			{
@@ -34,7 +34,7 @@ async function transfromImage() {
 				fit: { width: 1024, height: 1024 },
 				quality: 0.8,
 				imageDelivery: {
-					saveToLocalPath: 'test-data/test-result1024.jpeg',
+					saveToLocalPath: `test-data/test-result-${index}-1024.jpeg`,
 				},
 			},
 			{
@@ -42,7 +42,7 @@ async function transfromImage() {
 				fit: { width: 512, height: 512 },
 				quality: 0.8,
 				imageDelivery: {
-					saveToLocalPath: 'test-data/test-result512.jpeg',
+					saveToLocalPath: `test-data/test-result-${index}-512.jpeg`,
 				},
 			},
 		],
