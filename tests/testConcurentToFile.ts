@@ -19,8 +19,8 @@ async function test() {
 
 async function transfromImage(index: number) {
 	const response = await scaler.transform({
-		source: { localPath: 'test-data/test.heic' },
-		destinations: [
+		input: { localPath: 'test-data/test.heic' },
+		output: [
 			{
 				type: 'jpeg',
 				fit: { width: 1280, height: 1280 },
