@@ -1,6 +1,6 @@
 {
 	"name": "scaler.pics",
-	"version": "0.9.2",
+	"version": "1.0.0",
 	"description": "Scaler.pics API helper library for transforming photos and images",
 	"main": "dist/scaler.js",
 	"types": "dist/scaler.d.ts",
