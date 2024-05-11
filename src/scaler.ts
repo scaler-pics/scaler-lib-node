@@ -1,14 +1,15 @@
 import { jwtDecode } from 'jwt-decode';
 import {
-	Destination as ApiDestination,
-	DestinationImageType,
+	Output as ApiOutput,
+	OutputImageType,
 	NormalizedCrop,
 	Size,
-	SourceImageInfo,
+	InputImageInfo,
 	TransfomResponse as ApiTransfomResponse,
 	TransformOptions as ApiTransformOptions,
 	Upload,
 	ImageDeleteBody,
+	Fit,
 } from './models/transform';
 import fs from 'fs';
 import { Readable } from 'stream';
@@ -23,15 +24,13 @@ interface PromiseResolvers {
 }
 
 export interface TransformOptions {
-	source: SourceOptions;
-	destination?: DestinationOptions;
-	destinations?: DestinationOptions[];
+	input: InputOptions;
+	output?: OutputOptions | OutputOptions[];
 }
 
 export interface TransformResponse {
-	sourceImage: SourceImageInfo;
-	image?: ImageResult;
-	destinationImages?: DestinationImage[];
+	inputImage: InputImageInfo;
+	outputImage?: OutputImage | OutputImage[];
 	timeStats: {
 		signMs: number;
 		sendImageMs: number;
@@ -41,7 +40,7 @@ export interface TransformResponse {
 	};
 }
 
-export interface SourceOptions {
+export interface InputOptions {
 	remoteUrl?: string;
 	localPath?: string;
 	buffer?: Buffer;
@@ -53,16 +52,16 @@ export interface ImageDelivery {
 	buffer?: boolean;
 }
 
-export interface DestinationOptions {
-	fit: Size;
-	type: DestinationImageType;
+export interface OutputOptions {
+	fit: Fit;
+	type: OutputImageType;
 	quality?: number;
 	imageDelivery?: ImageDelivery;
 	crop?: NormalizedCrop;
 }
 
-export interface DestinationImage {
-	fit: Size;
+export interface OutputImage {
+	fit: Fit;
 	pixelSize: Size;
 	image: ImageResult;
 }
@@ -85,27 +84,24 @@ export default class Scaler {
 	): Promise<TransformResponse> => {
 		await this.refreshAccessTokenIfNeeded();
 		const start = Date.now();
-		if (
-			(!options.destinations || !options.destinations!.length) &&
-			!options.destination
-		) {
-			throw new Error('No destination provided');
+		if (!options.output) {
+			throw new Error('No output provided');
 		}
-		const dests: DestinationOptions[] = options.destinations
-			? options.destinations
-			: [options.destination!];
-		const destinations: ApiDestination[] = dests.map((dest) => {
+		const outs: OutputOptions[] = Array.isArray(options.output)
+			? options.output
+			: [options.output];
+		const outputs: ApiOutput[] = outs.map((out) => {
 			return {
-				fit: dest.fit,
-				type: dest.type,
-				quality: dest.quality,
-				upload: dest.imageDelivery?.upload,
-				crop: dest.crop,
+				fit: out.fit,
+				type: out.type,
+				quality: out.quality,
+				upload: out.imageDelivery?.upload,
+				crop: out.crop,
 			};
 		});
 		const options2: ApiTransformOptions = {
-			source: options.source.remoteUrl || 'body',
-			destinations,
+			input: options.input.remoteUrl || 'body',
+			outputs,
 		};
 		const startSignUrl = Date.now();
 		const res = await fetch(signUrl, {
@@ -127,16 +123,16 @@ export default class Scaler {
 		const { url } = json as { url: string };
 		const headers: HeadersInit = {};
 		let body: any = undefined;
-		if (options.source.buffer) {
+		if (options.input.buffer) {
 			headers['Content-Type'] = 'application/x-octet-stream';
-			headers['Content-Length'] = `${options.source.buffer.length}`;
-			body = options.source.buffer;
-		} else if (options.source.localPath) {
+			headers['Content-Length'] = `${options.input.buffer.length}`;
+			body = options.input.buffer;
+		} else if (options.input.localPath) {
 			headers['Content-Type'] = 'application/x-octet-stream';
-			const { size } = fs.statSync(options.source.localPath);
+			const { size } = fs.statSync(options.input.localPath);
 			headers['Content-Type'] = 'application/x-octet-stream';
 			headers['Content-Length'] = `${size}`;
-			body = fs.createReadStream(options.source.localPath);
+			body = fs.createReadStream(options.input.localPath);
 		}
 		const startTransformTime = Date.now();
 		const res2 = await fetch(url, {
@@ -153,8 +149,8 @@ export default class Scaler {
 		}
 		const endTransformTime = Date.now();
 		const {
-			sourceImage,
-			destinationImages,
+			inputImage: sourceImage,
+			outputImages: outputApiImages,
 			deleteUrl,
 			timeStats: apiTimeStats,
 		} = (await res2.json()) as ApiTransfomResponse;
@@ -164,12 +160,12 @@ export default class Scaler {
 			apiTimeStats.transformMs -
 			(apiTimeStats.uploadImagesMs || 0);
 		const startGetImages = Date.now();
-		const promises = destinationImages.map(
+		const promises = outputApiImages.map(
 			(dest, i): Promise<{ image: ArrayBuffer | string | 'uploaded' }> => {
 				if (dest.downloadUrl) {
 					const dlUrl = dest.downloadUrl;
-					if (dests[i].imageDelivery?.saveToLocalPath) {
-						const destPath = dests[i].imageDelivery!
+					if (outs[i].imageDelivery?.saveToLocalPath) {
+						const destPath = outs[i].imageDelivery!
 							.saveToLocalPath as string;
 						return new Promise<{
 							image: ArrayBuffer | string | 'uploaded';
@@ -245,11 +241,11 @@ export default class Scaler {
 				}
 			}
 		);
-		const destinationImages2 = await Promise.all(promises);
+		const outputImageResults = await Promise.all(promises);
 		const getImagesMs =
 			apiTimeStats.uploadImagesMs || Date.now() - startGetImages;
 		const deleteBody: ImageDeleteBody = {
-			images: destinationImages
+			images: outputApiImages
 				.filter((dest) => dest.fileId)
 				.map((dest) => dest.fileId!),
 		};
@@ -263,19 +259,18 @@ export default class Scaler {
 			console.error('Failed to delete received images', error);
 		});
 		const totalMs = Date.now() - start;
+		const outputImages = outputApiImages.map((dest, i) => {
+			return {
+				fit: dest.fit,
+				pixelSize: dest.pixelSize,
+				image: outputImageResults[i].image,
+			};
+		});
 		const response: TransformResponse = {
-			sourceImage,
-			image: options.destination ? destinationImages2[0].image : undefined,
-			destinationImages: options.destinations
-				? destinationImages.map((dest, i) => {
-						return {
-							fit: dest.fit,
-							pixelSize: dest.pixelSize,
-							image: destinationImages2[i].image,
-						};
-						// eslint-disable-next-line
-				  })
-				: undefined,
+			inputImage: sourceImage,
+			outputImage: Array.isArray(options.output)
+				? outputImages
+				: outputImages[0],
 			timeStats: {
 				signMs,
 				sendImageMs,

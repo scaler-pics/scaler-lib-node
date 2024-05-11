@@ -1,18 +1,16 @@
 /// <reference types="node" />
-import { DestinationImageType, NormalizedCrop, Size, SourceImageInfo, Upload } from './models/transform';
+import { OutputImageType, NormalizedCrop, Size, InputImageInfo, Upload, Fit } from './models/transform';
 interface PromiseResolvers {
     resolve: (value: void | PromiseLike<void>) => void;
     reject: (reason?: any) => void;
 }
 export interface TransformOptions {
-    source: SourceOptions;
-    destination?: DestinationOptions;
-    destinations?: DestinationOptions[];
+    input: InputOptions;
+    output?: OutputOptions | OutputOptions[];
 }
 export interface TransformResponse {
-    sourceImage: SourceImageInfo;
-    image?: ImageResult;
-    destinationImages?: DestinationImage[];
+    inputImage: InputImageInfo;
+    outputImage?: OutputImage | OutputImage[];
     timeStats: {
         signMs: number;
         sendImageMs: number;
@@ -21,7 +19,7 @@ export interface TransformResponse {
         totalMs: number;
     };
 }
-export interface SourceOptions {
+export interface InputOptions {
     remoteUrl?: string;
     localPath?: string;
     buffer?: Buffer;
@@ -31,15 +29,15 @@ export interface ImageDelivery {
     upload?: Upload;
     buffer?: boolean;
 }
-export interface DestinationOptions {
-    fit: Size;
-    type: DestinationImageType;
+export interface OutputOptions {
+    fit: Fit;
+    type: OutputImageType;
     quality?: number;
     imageDelivery?: ImageDelivery;
     crop?: NormalizedCrop;
 }
-export interface DestinationImage {
-    fit: Size;
+export interface OutputImage {
+    fit: Fit;
     pixelSize: Size;
     image: ImageResult;
 }

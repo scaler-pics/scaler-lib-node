@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.destinationImageTypes = exports.sourceImageTypes = void 0;
-exports.sourceImageTypes = [
+exports.outputImageTypes = exports.inputImageTypes = void 0;
+exports.inputImageTypes = [
     'jpeg',
     'png',
     'webp',
@@ -10,8 +10,4 @@ exports.sourceImageTypes = [
     'gif',
     'bmp',
 ];
-exports.destinationImageTypes = [
-    'jpeg',
-    'png',
-    'heic',
-];
+exports.outputImageTypes = ['jpeg', 'png', 'heic'];

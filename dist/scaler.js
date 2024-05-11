@@ -25,26 +25,25 @@ class Scaler {
         this.transform = (options) => __awaiter(this, void 0, void 0, function* () {
             yield this.refreshAccessTokenIfNeeded();
             const start = Date.now();
-            if ((!options.destinations || !options.destinations.length) &&
-                !options.destination) {
-                throw new Error('No destination provided');
+            if (!options.output) {
+                throw new Error('No output provided');
             }
-            const dests = options.destinations
-                ? options.destinations
-                : [options.destination];
-            const destinations = dests.map((dest) => {
+            const outs = Array.isArray(options.output)
+                ? options.output
+                : [options.output];
+            const outputs = outs.map((out) => {
                 var _a;
                 return {
-                    fit: dest.fit,
-                    type: dest.type,
-                    quality: dest.quality,
-                    upload: (_a = dest.imageDelivery) === null || _a === void 0 ? void 0 : _a.upload,
-                    crop: dest.crop,
+                    fit: out.fit,
+                    type: out.type,
+                    quality: out.quality,
+                    upload: (_a = out.imageDelivery) === null || _a === void 0 ? void 0 : _a.upload,
+                    crop: out.crop,
                 };
             });
             const options2 = {
-                source: options.source.remoteUrl || 'body',
-                destinations,
+                input: options.input.remoteUrl || 'body',
+                outputs,
             };
             const startSignUrl = Date.now();
             const res = yield fetch(signUrl, {
@@ -64,17 +63,17 @@ class Scaler {
             const { url } = json;
             const headers = {};
             let body = undefined;
-            if (options.source.buffer) {
+            if (options.input.buffer) {
                 headers['Content-Type'] = 'application/x-octet-stream';
-                headers['Content-Length'] = `${options.source.buffer.length}`;
-                body = options.source.buffer;
+                headers['Content-Length'] = `${options.input.buffer.length}`;
+                body = options.input.buffer;
             }
-            else if (options.source.localPath) {
+            else if (options.input.localPath) {
                 headers['Content-Type'] = 'application/x-octet-stream';
-                const { size } = fs_1.default.statSync(options.source.localPath);
+                const { size } = fs_1.default.statSync(options.input.localPath);
                 headers['Content-Type'] = 'application/x-octet-stream';
                 headers['Content-Length'] = `${size}`;
-                body = fs_1.default.createReadStream(options.source.localPath);
+                body = fs_1.default.createReadStream(options.input.localPath);
             }
             const startTransformTime = Date.now();
             const res2 = yield fetch(url, {
@@ -88,18 +87,18 @@ class Scaler {
                 throw new Error(`Failed to transform image. status: ${res2.status}, text: ${text}`);
             }
             const endTransformTime = Date.now();
-            const { sourceImage, destinationImages, deleteUrl, timeStats: apiTimeStats, } = (yield res2.json());
+            const { inputImage: sourceImage, outputImages: outputApiImages, deleteUrl, timeStats: apiTimeStats, } = (yield res2.json());
             const sendImageMs = endTransformTime -
                 startTransformTime -
                 apiTimeStats.transformMs -
                 (apiTimeStats.uploadImagesMs || 0);
             const startGetImages = Date.now();
-            const promises = destinationImages.map((dest, i) => {
+            const promises = outputApiImages.map((dest, i) => {
                 var _a;
                 if (dest.downloadUrl) {
                     const dlUrl = dest.downloadUrl;
-                    if ((_a = dests[i].imageDelivery) === null || _a === void 0 ? void 0 : _a.saveToLocalPath) {
-                        const destPath = dests[i].imageDelivery
+                    if ((_a = outs[i].imageDelivery) === null || _a === void 0 ? void 0 : _a.saveToLocalPath) {
+                        const destPath = outs[i].imageDelivery
                             .saveToLocalPath;
                         return new Promise((resolve, reject) => {
                             fetch(dlUrl)
@@ -167,10 +166,10 @@ class Scaler {
                     return Promise.resolve({ image: 'uploaded' });
                 }
             });
-            const destinationImages2 = yield Promise.all(promises);
+            const outputImageResults = yield Promise.all(promises);
             const getImagesMs = apiTimeStats.uploadImagesMs || Date.now() - startGetImages;
             const deleteBody = {
-                images: destinationImages
+                images: outputApiImages
                     .filter((dest) => dest.fileId)
                     .map((dest) => dest.fileId),
             };
@@ -184,19 +183,18 @@ class Scaler {
                 console.error('Failed to delete received images', error);
             });
             const totalMs = Date.now() - start;
+            const outputImages = outputApiImages.map((dest, i) => {
+                return {
+                    fit: dest.fit,
+                    pixelSize: dest.pixelSize,
+                    image: outputImageResults[i].image,
+                };
+            });
             const response = {
-                sourceImage,
-                image: options.destination ? destinationImages2[0].image : undefined,
-                destinationImages: options.destinations
-                    ? destinationImages.map((dest, i) => {
-                        return {
-                            fit: dest.fit,
-                            pixelSize: dest.pixelSize,
-                            image: destinationImages2[i].image,
-                        };
-                        // eslint-disable-next-line
-                    })
-                    : undefined,
+                inputImage: sourceImage,
+                outputImage: Array.isArray(options.output)
+                    ? outputImages
+                    : outputImages[0],
                 timeStats: {
                     signMs,
                     sendImageMs,

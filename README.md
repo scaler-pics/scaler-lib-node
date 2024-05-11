@@ -19,9 +19,9 @@ import Scaler from 'scaler.pics';
 
 const scaler = new Scaler('YOUR_API_KEY');
 
-const { image } = await scaler.transform({
-   source: { localPath: '/path/to/large-image.heic' },
-   destination: {
+const { outputImage } = await scaler.transform({
+   input: { localPath: '/path/to/large-image.heic' },
+   output: {
       type: 'jpeg',
       fit: { width: 512, height: 512 },
       quality: 0.8,
@@ -36,7 +36,7 @@ const { image } = await scaler.transform({
 	local machine)
 </em>
 
-## Multiple Destinations
+## Multiple Outputs
 
 Generate multiple images in a single request (up to 10). Images can be returned as an ArrayBuffer, saved to a specified local path, or uploaded to a storage bucket.
 
@@ -46,8 +46,8 @@ import Scaler from 'scaler.pics';
 const scaler = new Scaler('YOUR_API_KEY');
 
 const response = await scaler.transform({
-   source: { localPath: '/path/to/large-image.heic' },
-   destinations: [
+   input: { localPath: '/path/to/large-image.heic' },
+   output: [
       {
          type: 'jpeg',
          fit: { width: 1280, height: 1280 },
@@ -79,31 +79,31 @@ Below are self-explanatory TypeScript interfaces of the transform options.
 
 ```typescript
 export interface TransformOptions {
-   source: SourceOptions;
-   destination?: DestinationOptions;
-   destinations?: DestinationOptions[];
+   input: InputOptions;
+   output?: OutputOptions | OutputOptions[];
 }
 
-interface Source {
+interface InputOptions {
    remoteUrl?: string;
    localPath?: string;
    buffer?: Buffer;
 }
 
-interface DestinationOptions {
-   fit: Size;
-   type: DestinationImageType;
+interface OutputOptions {
+   fit: Fit;
+   type: OutputImageType;
    quality?: number;
    imageDelivery?: ImageDelivery;
    crop?: NormalizedCrop;
 }
 
-interface Size {
+interface Fit {
    width: number;
    height: number;
+   upscale?: boolean;
 }
 
-type DestinationImageType = 'jpeg' | 'png' | 'heic';
+type OutputImageType = 'jpeg' | 'png' | 'heic';
 
 interface ImageDelivery {
    saveToLocalPath?: string;
@@ -117,9 +117,9 @@ export interface Upload {
 }
 ```
 
-Exactly one property of the **SourceOptions** object can be specified for the source image. If specifying **remoteUrl** make sure the URL is valid and the image freely accessible.
+Exactly one property of the **InputOptions** object can be specified for the input image. If specifying **remoteUrl** make sure the URL is valid and the image freely accessible.
 
-You can set either single **destination** or multiple **destinations** (up to 10).
+You can set either single **output** or multiple array of outputs (up to 10).
 
 Exactly one optional parameter of **ImageDelivery** needs to be specified. If **imageDelivery** itself is undefined, the image will be delivered as an **ArrayBuffer**.
 
@@ -129,9 +129,8 @@ The **upload** parameter of **ImageDelivery** allows you to upload the image dir
 
 ```typescript
 export interface TransformResponse {
-   sourceImage: SourceImageInfo;
-   image?: ImageResult;
-   destinationImages?: DestinationImage[];
+   inputImage: InputImageInfo;
+   outputImage?: OutputImage | OutputImage[];
    timeStats: {
       signMs: number;
       sendImageMs: number;
@@ -141,18 +140,24 @@ export interface TransformResponse {
    };
 }
 
-interface SourceImageInfo {
+interface InputImageInfo {
    pixelSize: Size;
    byteSize: number;
 }
 
-interface DestinationImage {
-   fit: Size;
+interface OutputImage {
+   fit: Fit;
    pixelSize: Size;
    image: ImageResult;
 }
 
 type ImageResult = ArrayBuffer | string | 'uploaded';
+
+interface Fit {
+   width: number;
+   height: number;
+   upscale?: boolean;
+}
 
 interface Size {
    width: number;
@@ -160,8 +165,6 @@ interface Size {
 }
 ```
 
-**sourceImage** contains information about the image sent.
+**inputImage** contains information about the image sent.
 
-If single destination was set in the **TransformOptions** then the result will be in the **image** property of the response, otherwise in the **destinationImages**.
-
-The **image** property of the **DestinationImage** varies: it can be an ArrayBuffer, a string indicating the image was 'uploaded', or a path to the local file where the transformed image was saved.
+The **image** property of the **OutputImage** varies: it can be an ArrayBuffer, a string indicating the image was 'uploaded', or a path to the local file where the transformed image was saved.
