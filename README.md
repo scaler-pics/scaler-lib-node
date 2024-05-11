@@ -1,4 +1,6 @@
-# Scaler Node.js API Documentation
+# Scaler.pics
+
+Image resizing and conversion service.
 
 ## Installation
 
@@ -26,6 +28,7 @@ const { image } = await scaler.transform({
    },
 });
 ```
+
 <em>
 	When testing the api make sure you test from location with a
 	good upload speed as that can greatly affect the response
@@ -76,41 +79,41 @@ Below are self-explanatory TypeScript interfaces of the transform options.
 
 ```typescript
 export interface TransformOptions {
-	source: SourceOptions;
-	destination?: DestinationOptions;
-	destinations?: DestinationOptions[];
+   source: SourceOptions;
+   destination?: DestinationOptions;
+   destinations?: DestinationOptions[];
 }
 
 interface Source {
-	remoteUrl?: string;
-	localPath?: string;
-	buffer?: Buffer;
+   remoteUrl?: string;
+   localPath?: string;
+   buffer?: Buffer;
 }
 
 interface DestinationOptions {
-	fit: Size;
-	type: DestinationImageType;
-	quality?: number;
-	imageDelivery?: ImageDelivery;
-	crop?: NormalizedCrop;
+   fit: Size;
+   type: DestinationImageType;
+   quality?: number;
+   imageDelivery?: ImageDelivery;
+   crop?: NormalizedCrop;
 }
 
 interface Size {
-	width: number;
-	height: number;
+   width: number;
+   height: number;
 }
 
 type DestinationImageType = 'jpeg' | 'png' | 'heic';
 
 interface ImageDelivery {
-	saveToLocalPath?: string;
-	upload?: Upload;
-	buffer?: boolean;
+   saveToLocalPath?: string;
+   upload?: Upload;
+   buffer?: boolean;
 }
 
 export interface Upload {
-	url: string;
-	method?: 'POST' | 'PUT';
+   url: string;
+   method?: 'POST' | 'PUT';
 }
 ```
 
@@ -126,16 +129,16 @@ The **upload** parameter of **ImageDelivery** allows you to upload the image dir
 
 ```typescript
 export interface TransformResponse {
-	sourceImage: SourceImageInfo;
-	image?: ImageResult;
-	destinationImages?: DestinationImage[];
-	timeStats: {
-		signMs: number;
-		sendImageMs: number;
-		transformMs: number;
-		getImagesMs: number;
-		totalMs: number;
-	};
+   sourceImage: SourceImageInfo;
+   image?: ImageResult;
+   destinationImages?: DestinationImage[];
+   timeStats: {
+      signMs: number;
+      sendImageMs: number;
+      transformMs: number;
+      getImagesMs: number;
+      totalMs: number;
+   };
 }
 
 interface SourceImageInfo {
