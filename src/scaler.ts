@@ -148,12 +148,13 @@ export default class Scaler {
 			);
 		}
 		const endTransformTime = Date.now();
+		const transfromResponse = (await res2.json()) as ApiTransfomResponse;
 		const {
-			inputImage: sourceImage,
+			inputImage: inputApiImage,
 			outputImages: outputApiImages,
 			deleteUrl,
 			timeStats: apiTimeStats,
-		} = (await res2.json()) as ApiTransfomResponse;
+		} = transfromResponse;
 		const sendImageMs =
 			endTransformTime -
 			startTransformTime -
@@ -267,7 +268,7 @@ export default class Scaler {
 			};
 		});
 		const response: TransformResponse = {
-			inputImage: sourceImage,
+			inputImage: inputApiImage,
 			outputImage: Array.isArray(options.output)
 				? outputImages
 				: outputImages[0],
