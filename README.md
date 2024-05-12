@@ -29,13 +29,6 @@ const { outputImage } = await scaler.transform({
 });
 ```
 
-<em>
-	When testing the api make sure you test from location with a
-	good upload speed as that can greatly affect the response
-	time. (for example, test from your server and not from your
-	local machine)
-</em>
-
 ## Multiple Outputs
 
 Generate multiple images in a single request (up to 10). Images can be returned as an ArrayBuffer, saved to a specified local path, or uploaded to a storage bucket.
