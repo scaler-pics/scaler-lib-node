@@ -101,7 +101,7 @@ export default class Scaler {
 		});
 		const options2: ApiTransformOptions = {
 			input: options.input.remoteUrl || 'body',
-			outputs,
+			output: outputs,
 		};
 		const startSignUrl = Date.now();
 		const res = await fetch(signUrl, {
