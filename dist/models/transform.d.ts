@@ -5,7 +5,7 @@ export declare const outputImageTypes: OutputImageType[];
 type URLString = string;
 export interface TransformOptions {
     input: 'body' | URLString;
-    outputs: Output[];
+    output: Output[];
 }
 export interface Output {
     fit: Fit;

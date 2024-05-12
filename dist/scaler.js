@@ -43,7 +43,7 @@ class Scaler {
             });
             const options2 = {
                 input: options.input.remoteUrl || 'body',
-                outputs,
+                output: outputs,
             };
             const startSignUrl = Date.now();
             const res = yield fetch(signUrl, {
@@ -87,7 +87,8 @@ class Scaler {
                 throw new Error(`Failed to transform image. status: ${res2.status}, text: ${text}`);
             }
             const endTransformTime = Date.now();
-            const { inputImage: sourceImage, outputImages: outputApiImages, deleteUrl, timeStats: apiTimeStats, } = (yield res2.json());
+            const transfromResponse = (yield res2.json());
+            const { inputImage: inputApiImage, outputImages: outputApiImages, deleteUrl, timeStats: apiTimeStats, } = transfromResponse;
             const sendImageMs = endTransformTime -
                 startTransformTime -
                 apiTimeStats.transformMs -
@@ -191,7 +192,7 @@ class Scaler {
                 };
             });
             const response = {
-                inputImage: sourceImage,
+                inputImage: inputApiImage,
                 outputImage: Array.isArray(options.output)
                     ? outputImages
                     : outputImages[0],
