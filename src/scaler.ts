@@ -43,7 +43,7 @@ export interface TransformResponse {
 export interface InputOptions {
 	remoteUrl?: string;
 	localPath?: string;
-	buffer?: Buffer;
+	buffer?: Buffer | ArrayBuffer;
 }
 
 export interface ImageDelivery {
@@ -125,7 +125,9 @@ export default class Scaler {
 		let body: any = undefined;
 		if (options.input.buffer) {
 			headers['Content-Type'] = 'application/x-octet-stream';
-			headers['Content-Length'] = `${options.input.buffer.length}`;
+			const anyBuffer = options.input.buffer as any;
+			const len = anyBuffer.length || anyBuffer.byteLength || 0;
+			headers['Content-Length'] = `${len}`;
 			body = options.input.buffer;
 		} else if (options.input.localPath) {
 			headers['Content-Type'] = 'application/x-octet-stream';

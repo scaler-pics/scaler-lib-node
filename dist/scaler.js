@@ -65,7 +65,9 @@ class Scaler {
             let body = undefined;
             if (options.input.buffer) {
                 headers['Content-Type'] = 'application/x-octet-stream';
-                headers['Content-Length'] = `${options.input.buffer.length}`;
+                const anyBuffer = options.input.buffer;
+                const len = anyBuffer.length || anyBuffer.byteLength || 0;
+                headers['Content-Length'] = `${len}`;
                 body = options.input.buffer;
             }
             else if (options.input.localPath) {

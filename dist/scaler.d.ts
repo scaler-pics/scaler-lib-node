@@ -22,7 +22,7 @@ export interface TransformResponse {
 export interface InputOptions {
     remoteUrl?: string;
     localPath?: string;
-    buffer?: Buffer;
+    buffer?: Buffer | ArrayBuffer;
 }
 export interface ImageDelivery {
     saveToLocalPath?: string;
