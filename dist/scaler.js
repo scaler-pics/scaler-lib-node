@@ -259,12 +259,9 @@ class Scaler {
             }
         });
         this.apiKey = apiKey;
-        try {
-            this.refreshAccessTokenIfNeeded();
-        }
-        catch (error) {
-            console.error('Failed to get access token at initialization', error);
-        }
+        this.refreshAccessTokenIfNeeded().catch((error) => {
+            console.error('Error getting the access token at initialization', error);
+        });
     }
 }
 exports.default = Scaler;
