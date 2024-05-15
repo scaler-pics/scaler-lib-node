@@ -76,7 +76,11 @@ class Scaler {
 
 	constructor(apiKey: string) {
 		this.apiKey = apiKey;
-		this.refreshAccessTokenIfNeeded();
+		try {
+			this.refreshAccessTokenIfNeeded();
+		} catch (error) {
+			console.error('Failed to get access token at initialization', error);
+		}
 	}
 
 	public transform = async (
