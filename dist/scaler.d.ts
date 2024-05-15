@@ -42,7 +42,7 @@ export interface OutputImage {
     image: ImageResult;
 }
 export type ImageResult = ArrayBuffer | string | 'uploaded';
-export default class Scaler {
+declare class Scaler {
     private apiKey;
     accessToken: string | null;
     isRefreshingAccessToken: boolean;
@@ -51,4 +51,4 @@ export default class Scaler {
     transform: (options: TransformOptions) => Promise<TransformResponse>;
     private refreshAccessTokenIfNeeded;
 }
-export {};
+export default Scaler;

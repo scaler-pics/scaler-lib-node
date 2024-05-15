@@ -1,4 +1,3 @@
-"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -8,13 +7,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const jwt_decode_1 = require("jwt-decode");
-const fs_1 = __importDefault(require("fs"));
-const stream_1 = require("stream");
+import { jwtDecode } from 'jwt-decode';
+import fs from 'fs';
+import { Readable } from 'stream';
 const refreshAccessTokenUrl = process.env.REFRESH_URL || 'https://api.scaler.pics/auth/api-key-token';
 const signUrl = process.env.SIGN_URL || 'https://sign.scaler.pics/sign';
 class Scaler {
@@ -72,10 +67,10 @@ class Scaler {
             }
             else if (options.input.localPath) {
                 headers['Content-Type'] = 'application/x-octet-stream';
-                const { size } = fs_1.default.statSync(options.input.localPath);
+                const { size } = fs.statSync(options.input.localPath);
                 headers['Content-Type'] = 'application/x-octet-stream';
                 headers['Content-Length'] = `${size}`;
-                body = fs_1.default.createReadStream(options.input.localPath);
+                body = fs.createReadStream(options.input.localPath);
             }
             const startTransformTime = Date.now();
             const res2 = yield fetch(url, {
@@ -116,7 +111,7 @@ class Scaler {
                                     return;
                                 }
                                 const reader = res3.body.getReader();
-                                const stream = new stream_1.Readable({
+                                const stream = new Readable({
                                     read() {
                                         return __awaiter(this, void 0, void 0, function* () {
                                             const { done, value } = yield reader.read();
@@ -129,7 +124,7 @@ class Scaler {
                                         });
                                     },
                                 });
-                                const destStream = fs_1.default.createWriteStream(destPath);
+                                const destStream = fs.createWriteStream(destPath);
                                 stream.pipe(destStream);
                                 destStream.on('finish', () => {
                                     resolve({ image: destPath });
@@ -214,7 +209,7 @@ class Scaler {
                 shouldRefresh = true;
             }
             else {
-                const decoded = (0, jwt_decode_1.jwtDecode)(this.accessToken);
+                const decoded = jwtDecode(this.accessToken);
                 const now = Date.now() / 1000;
                 if (now >= decoded.exp) {
                     shouldRefresh = true;
@@ -262,5 +257,5 @@ class Scaler {
         this.refreshAccessTokenIfNeeded();
     }
 }
-exports.default = Scaler;
+export default Scaler;
 module.exports = Scaler;

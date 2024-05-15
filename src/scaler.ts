@@ -68,7 +68,7 @@ export interface OutputImage {
 
 export type ImageResult = ArrayBuffer | string | 'uploaded';
 
-export default class Scaler {
+class Scaler {
 	private apiKey: string;
 	accessToken: string | null = null;
 	isRefreshingAccessToken = false;
@@ -337,3 +337,6 @@ export default class Scaler {
 		}
 	};
 }
+
+export default Scaler;
+module.exports = Scaler;
