@@ -228,7 +228,7 @@ class Scaler {
                     this.refreshPromises.push({ resolve, reject });
                 });
             }
-            this.isRefreshingAccessToken = false;
+            this.isRefreshingAccessToken = true;
             try {
                 const res = yield fetch(refreshAccessTokenUrl, {
                     method: 'POST',

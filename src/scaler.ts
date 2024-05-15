@@ -309,7 +309,7 @@ class Scaler {
 			});
 		}
 
-		this.isRefreshingAccessToken = false;
+		this.isRefreshingAccessToken = true;
 		try {
 			const res = await fetch(refreshAccessTokenUrl, {
 				method: 'POST',
