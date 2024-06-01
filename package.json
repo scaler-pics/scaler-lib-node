@@ -1,6 +1,6 @@
 {
 	"name": "scaler.pics",
-	"version": "1.1.4",
+	"version": "1.1.5",
 	"description": "Scaler.pics API helper library for efficient transforming photos and images",
 	"main": "dist/scaler.js",
 	"module": "dist/esm/index.js",
@@ -12,7 +12,7 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/scaler-pics/scaler-lib.git"
+		"url": "git+https://github.com/scaler-pics/scaler.pics-js.git"
 	},
 	"keywords": [
 		"resize",
@@ -24,9 +24,9 @@
 	"author": "Matej Ukmar",
 	"license": "ISC",
 	"bugs": {
-		"url": "https://github.com/scaler-pics/scaler-lib/issues"
+		"url": "https://github.com/scaler-pics/scaler.pics-js/issues"
 	},
-	"homepage": "https://github.com/scaler-pics/scaler-lib#readme",
+	"homepage": "https://scaler.pics",
 	"dependencies": {
 		"@types/dateformat": "^3.0.1",
 		"@types/jwt-decode": "^3.1.0",
